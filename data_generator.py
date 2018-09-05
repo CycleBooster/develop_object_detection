@@ -194,8 +194,8 @@ class data_generator():
             return answer_list
     def __set_label(self,label,grid_depth,size,mirror_flag,label_width_offset,width_offset):
         __conf=np.zeros((size,size+label_width_offset,grid_depth,1))
-        __box=np.zeros((size,size+label_width_offset,grid_depth,4))
         __cat=np.zeros((size,size+label_width_offset,grid_depth,class_width))
+        __box=np.zeros((size,size+label_width_offset,grid_depth,4))
         for obj in label:
             y_block_size=1/size
             x_block_size=1/(size+label_width_offset)
@@ -272,7 +272,7 @@ class data_generator():
                             __cat[y_mid_index][x_mid_index][i]=temp_cat
                             __box[y_mid_index][x_mid_index][i]=np.array([out_x_mid,out_y_mid,out_w,out_h])
                             break
-        __out=np.concatenate([__conf,__box,__cat],axis=-1)
+        __out=np.concatenate([__conf,__cat,__box],axis=-1)
         return __out
     def get_max_batch_index(self):
         return (int)(self.data_len/self.batch_size)

@@ -18,7 +18,7 @@ pred_list=['horse_human','dog','chair','human_bicycle']
 if __name__ == '__main__':
     from keras_model import ObjectDetector
     test=ObjectDetector("./model/"+data_name+".h5",center_flag=is_center,lr=1e-4,pred_list=pred_list,test_size=(320,320))
-    # test.train(data_name=data_name,batch_size=16,epoch=1,keep_train=False)
+    test.train(data_name=data_name,batch_size=16,epoch=1,keep_train=False)
     # test.pred_print(-1,0,load_weight=True)
     # test.validate(4,0)
     # test.debug_IOU_mask(60)
