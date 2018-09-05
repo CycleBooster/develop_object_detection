@@ -16,8 +16,8 @@ pred_list=['horse_human','dog','chair','human_bicycle']
 # box_list=[[box[0]*16,box[1]*16] for box in box_list]
 # box_list=np.array(box_list,dtype=int)
 if __name__ == '__main__':
-    from yolo_model import yolo
-    test=yolo("./model/"+data_name+"_yolo.h5",center_flag=is_center,lr=1e-4,pred_list=pred_list,test_size=(320,320))
+    from keras_model import ObjectDetector
+    test=ObjectDetector("./model/"+data_name+".h5",center_flag=is_center,lr=1e-4,pred_list=pred_list,test_size=(320,320))
     # test.train(data_name=data_name,batch_size=16,epoch=1,keep_train=False)
     # test.pred_print(-1,0,load_weight=True)
     # test.validate(4,0)

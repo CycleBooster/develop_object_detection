@@ -24,7 +24,7 @@ import cv2
 from progress import bar
 cluster_thre=0.5
 weight_decay_rate=0.0001
-class yolo():
+class ObjectDetector():
     def __init__(self, model_path,center_flag,lr=0.001,pred_list=[],test_size=(384,384)):
         self.model_path=model_path
         self.lr=lr
