@@ -169,8 +169,8 @@ class ObjectDetector():
             id=debug_id
         else:
             id=self.opnametoID[y_pred.op.name]
-        box_true=y_true[1:5]
-        box_pred=y_pred[1:5]
+        box_true=y_true[-4:]
+        box_pred=y_pred[-4:]
         IOU=self.tf_getIOU(box_true,box_pred,y_pred,cluster=True,debug_id=debug_id)
         IOU_maxarg=tf.argmax(IOU,axis=-1)
         IOU_mask=tf.one_hot(IOU_maxarg,depth=self.grid_depth_list[id])
