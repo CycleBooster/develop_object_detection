@@ -209,8 +209,8 @@ class ObjectDetector():
             id=self.opnametoID[y_pred.op.name]
         y_true,IOU_cluster=self.get_mask(y_true,y_pred,debug_id=debug_id,get_answer=False)
         
-        conf_true,box_true=tf.split(y_true,[class_width,4],axis=-1)
-        conf_pred,box_pred=tf.split(y_pred,[class_width,4],axis=-1)
+        conf_true,cat_true,box_true=tf.split(y_true,[1,class_width,4],axis=-1)
+        conf_pred,cat_pred,box_pred=tf.split(y_pred,[1,class_width,4],axis=-1)
         total_conf_true=conf_true
         conf_true=conf_true*tf.expand_dims(tf.to_float(IOU_cluster>0.5),axis=-1)
         #get mask
@@ -281,9 +281,9 @@ class ObjectDetector():
 
     def prec(self,y_true, y_pred):
         y_true,IOU_cluster=self.get_mask(y_true,y_pred,get_answer=True)
-        conf_true=y_true[...,:class_width]
+        conf_true=y_true[...,:0]
         conf_true=tf.to_float(conf_true>=1)
-        conf_pred=y_pred[...,:class_width]
+        conf_pred=y_pred[...,:0]
         conf_pred=tf.to_float(conf_pred>pos_thre)
         pos_sum=tf.reduce_sum(conf_pred)
         pos_true_sum=tf.reduce_sum(conf_pred*conf_true)
@@ -291,9 +291,9 @@ class ObjectDetector():
         return acc
     def recall_1(self,y_true, y_pred):
         y_true,IOU_cluster=self.get_mask(y_true,y_pred,get_answer=True)
-        conf_true=y_true[...,:class_width]
+        conf_true=y_true[...,:0]
         conf_true=tf.to_float(conf_true>=1)
-        conf_pred=y_pred[...,:class_width]
+        conf_pred=y_pred[...,:0]
         conf_pred=tf.to_float(conf_pred>0.1)
         true_sum=tf.reduce_sum(conf_true)
         pos_true_sum=tf.reduce_sum(conf_pred*conf_true)
@@ -301,9 +301,9 @@ class ObjectDetector():
         return acc
     def recall_3(self,y_true, y_pred):
         y_true,IOU_cluster=self.get_mask(y_true,y_pred,get_answer=True)
-        conf_true=y_true[...,:class_width]
+        conf_true=y_true[...,:0]
         conf_true=tf.to_float(conf_true>=1)
-        conf_pred=y_pred[...,:class_width]
+        conf_pred=y_pred[...,:0]
         conf_pred=tf.to_float(conf_pred>0.3)
         true_sum=tf.reduce_sum(conf_true)
         pos_true_sum=tf.reduce_sum(conf_pred*conf_true)
@@ -311,9 +311,9 @@ class ObjectDetector():
         return acc
     def recall_5(self,y_true, y_pred):
         y_true,IOU_cluster=self.get_mask(y_true,y_pred,get_answer=True)
-        conf_true=y_true[...,:class_width]
+        conf_true=y_true[...,:0]
         conf_true=tf.to_float(conf_true>=1)
-        conf_pred=y_pred[...,:class_width]
+        conf_pred=y_pred[...,:0]
         conf_pred=tf.to_float(conf_pred>0.5)
         true_sum=tf.reduce_sum(conf_true)
         pos_true_sum=tf.reduce_sum(conf_pred*conf_true)
@@ -321,10 +321,10 @@ class ObjectDetector():
         return acc
     def conf_acc(self,y_true, y_pred):
         y_true,IOU_cluster=self.get_mask(y_true,y_pred,get_answer=True)
-        conf_true=y_true[...,:class_width]
+        conf_true=y_true[...,:0]
         conf_true=tf.to_float(conf_true>=1)
-        conf_pred=y_pred[...,:class_width]
-        conf_pred=tf.where(conf_pred>pos_thre,tf.ones(tf.shape(conf_pred)),tf.zeros(tf.shape(conf_pred)))
+        conf_pred=y_pred[...,:0]
+        conf_pred=tf.to_float(conf_pred>pos_thre)
         each_conf=1-mean_absolute_error(conf_true,conf_pred)
         acc=tf.reduce_mean(100*each_conf)
         return acc
@@ -332,8 +332,8 @@ class ObjectDetector():
         y_true,IOU_cluster=self.get_mask(y_true,y_pred,get_answer=True)
         conf_true=tf.to_float(y_true[...,0]>0)
         true_sum=tf.reduce_sum(conf_true)
-        clas_true=tf.argmax(y_true[...,1:class_width],axis=-1)
-        clas_pred=tf.argmax(y_pred[...,1:class_width],axis=-1)
+        clas_true=tf.argmax(y_true[...,1:class_width+1],axis=-1)
+        clas_pred=tf.argmax(y_pred[...,1:class_width+1],axis=-1)
         cond=tf.equal(clas_true,clas_pred)
         clas_equal=tf.where(cond,tf.ones(tf.shape(clas_pred)),tf.zeros(tf.shape(clas_pred)))
         pos_clas=conf_true*clas_equal
@@ -342,8 +342,8 @@ class ObjectDetector():
         return acc
     def box_acc(self,y_true, y_pred):
         y_true,IOU_cluster=self.get_mask(y_true,y_pred,get_answer=True)
-        conf_true,box_true=tf.split(y_true,[class_width,4],axis=-1)
-        conf_pred,box_pred=tf.split(y_pred,[class_width,4],axis=-1)
+        conf_true,cat_true,box_true=tf.split(y_true,[1,class_width,4],axis=-1)
+        conf_pred,cat_pred,box_pred=tf.split(y_pred,[1,class_width,4],axis=-1)
         conf_true=tf.to_float(tf.reduce_max(conf_true,axis=-1)>0)
         true_sum=tf.reduce_sum(conf_true)
         IOU=self.tf_getIOU(box_true,box_pred,y_pred)
@@ -648,15 +648,15 @@ class ObjectDetector():
             grid_width=32/(2**index)
             w_base,h_base=wh_base_list[index][...,0],wh_base_list[index][...,1]
             if self.center_flag:
-                scale_pred[...,0+class_width]=scale_pred[...,0+class_width]
-                scale_pred[...,1+class_width]=scale_pred[...,1+class_width]
-                scale_pred[...,2+class_width]=w_base*np.exp(scale_pred[...,2+class_width])
-                scale_pred[...,3+class_width]=h_base*np.exp(scale_pred[...,3+class_width])
+                scale_pred[...,-4]=scale_pred[...,-4]
+                scale_pred[...,-3]=scale_pred[...,-3]
+                scale_pred[...,-2]=w_base*np.exp(scale_pred[...,-2])
+                scale_pred[...,-1]=h_base*np.exp(scale_pred[...,-1])
             else:
-                scale_pred[...,0+class_width]=0.5*w_base*np.exp(scale_pred[...,0+class_width])
-                scale_pred[...,1+class_width]=0.5*w_base*np.exp(scale_pred[...,1+class_width])
-                scale_pred[...,2+class_width]=0.5*h_base*np.exp(scale_pred[...,2+class_width])
-                scale_pred[...,3+class_width]=0.5*h_base*np.exp(scale_pred[...,3+class_width])
+                scale_pred[...,-4]=0.5*w_base*np.exp(scale_pred[...,-4])
+                scale_pred[...,-3]=0.5*w_base*np.exp(scale_pred[...,-3])
+                scale_pred[...,-2]=0.5*h_base*np.exp(scale_pred[...,-2])
+                scale_pred[...,-1]=0.5*h_base*np.exp(scale_pred[...,-1])
             # scale_pred[...,0+class_width]=2*w_base*scale_pred[...,0+class_width]
             # scale_pred[...,1+class_width]=2*w_base*scale_pred[...,1+class_width]
             # scale_pred[...,2+class_width]=2*h_base*scale_pred[...,2+class_width]

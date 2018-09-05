@@ -257,7 +257,7 @@ def get_box(answer_list,index,width,height,center_box_type,show_thre=conf_thre,c
         temp_box_list=[]
         grid_y,grid_x,grid_depth=answer_list[answer_index].shape[1],answer_list[answer_index].shape[2],answer_list[answer_index].shape[3]
         answer_split=np.split(answer_list[answer_index][index],[1,5,5+class_width],axis=-1)
-        _confidence,_box,_cat=answer_split[0],answer_split[1],answer_split[2]
+        _confidence,_cat,_box=answer_split[0],answer_split[1],answer_split[2]
         flatten_conf=_confidence.flatten()
         conf_arg=np.flip(np.argsort(flatten_conf),axis=0)
         block_h,block_w=height/grid_y,width/grid_x
